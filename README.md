@@ -11,7 +11,7 @@ A Library is included with two modules:
 - `compare_prices`: Given a list of SKUS (E.g. results for a search term), get the product prices
   - If provided an `output_file`, will keep state and compare results to the previous run
 
-
+![CSV Output](report.png)
 
 ## Example Output
 Notice that the `check search term` and `compare product prices` tasks will only show changes if:
