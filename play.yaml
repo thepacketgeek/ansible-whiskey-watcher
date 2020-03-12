@@ -1,0 +1,98 @@
+---
+- name: Prep KL Module State Directories
+  hosts:
+    - localhost
+  connection: local
+  gather_facts: no
+
+  tasks:
+    - name: create products output dir
+      file:
+        path: "{{ user_data_path }}/products/"
+        state: directory
+    
+    - name: create prices output dir
+      file:
+        path: "{{ user_data_path }}/prices/"
+        state: directory
+
+- name: Check K&L Prices
+  hosts:
+    - all
+  connection: local
+  gather_facts: no
+    
+  vars:
+    products_file: "{{ user_data_path }}/products/{{ ansible_host }}.txt"
+    prices_file: "{{ user_data_path }}/prices/{{ ansible_host }}.csv"
+    build_dir: "{{ user_data_path }}/build"
+  
+  tasks:
+    - name: create products output file
+      file:
+        path: "{{ products_file }}"
+        state: touch
+        modification_time: preserve
+        access_time: preserve
+    
+    - name: check search term
+      search_products:
+        term: "{{ ansible_host }}"
+        output_file: "{{ products_file }}"
+      register: search_results
+    
+    - debug:
+        var: search_results
+        verbosity: 1
+
+    - name: create build output file
+      file:
+        path: "{{ build_dir }}"
+        state: directory
+    
+    - name: compare product prices
+      compare_prices:
+        product_skus: "{{ search_results | json_query('products[].sku') }}"
+        output_file: "{{ prices_file }}"
+      register: price_changes
+    
+    - debug:
+        var: price_changes["prices"]
+        verbosity: 1
+
+    - name: save prices
+      template:
+        src: template/price_change_csv.j2
+        dest: "{{ build_dir }}/{{ ansible_host }}.csv"
+
+
+- name: Combine Price Output
+  hosts:
+    - localhost
+  connection: local
+  gather_facts: no
+
+  vars:
+    build_dir: "{{ user_data_path }}/build"
+    csv_path: "{{ user_data_path }}/report.csv"
+
+  tasks:
+    - name: create new output build directory
+      file:
+        path: "{{ build_dir }}"
+        state: directory
+
+    - name: write CSV headers
+      copy:
+        src: template/headers.csv
+        dest: "{{ build_dir }}/_headers.csv"
+    
+    - name: combine price CSVs
+      assemble:
+        src: "{{ build_dir }}"
+        dest: "{{ csv_path }}"
+    
+    - name: cleanup build dir
+      file:
+        path: "{{ build_dir }}"
+        state: absent

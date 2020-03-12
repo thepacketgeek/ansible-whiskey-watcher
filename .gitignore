@@ -1,0 +1,10 @@
+# Ansible files
+ansible.cfg
+hosts
+*.retry
+
+# Output directories
+report.csv
+build/
+prices/
+products/
