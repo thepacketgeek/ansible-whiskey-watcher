@@ -125,7 +125,7 @@ def get_price_changes(
     """ Check if skus for the given search term have changed since the last play """
     if not output_file:
         # If we're not asked to keep state, products are always "changed=True"
-        return [PriceChange(p.name, p.sku, None, p.price, p.price) for p in products]
+        return [PriceChange(p.name, p.sku, None, p.price) for p in products]
 
     new_prices = {p.sku: p.price for p in products}
     previous = get_previous_prices(output_file)
@@ -135,16 +135,7 @@ def get_price_changes(
     if is_changed:
         write_new_prices(output_file, new_prices)
 
-    return [
-        PriceChange(
-            p.name,
-            p.sku,
-            previous.get(p.sku),
-            p.price,
-            previous.get(p.sku, p.price) - p.price,
-        )
-        for p in products
-    ]
+    return [PriceChange(p.name, p.sku, previous.get(p.sku), p.price,) for p in products]
 
 
 def main():

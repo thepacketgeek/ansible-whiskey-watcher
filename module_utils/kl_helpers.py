@@ -47,7 +47,21 @@ class PriceChange(NamedTuple):
     sku: str
     previous_price: Optional[float]
     current_price: Optional[float]
-    difference: Optional[float]
+
+    @property
+    def difference(self) -> Optional[float]:
+        """ Attempt to find price difference
+            if previous and current prices are provided
+        """
+        # If price is None, use 0.0 for math
+        if self.previous_price is None or self.current_price is None:
+            return None
+
+        else:
+            # subtract current price from previous to get the change:
+            # E.g. $10 -> $5  == - $5 difference
+            # E.g. $10 -> $20  == + $10 difference
+            self.current_price - self.previous_price
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -85,4 +99,3 @@ async def get_product_by_sku(sku: str) -> Optional[Product]:
     for product in products:
         if product.sku == sku:
             return product
-
